@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 const NavBar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -46,7 +47,11 @@ const NavBar: React.FC = () => {
               </button>
             </div>
             <div className="md:hidden">
-              <button className="text-white">
+              <button
+                className="text-white"
+                onClick={() => setMobileMenuOpen(true)}
+                aria-label="Open menu"
+              >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
@@ -56,6 +61,45 @@ const NavBar: React.FC = () => {
         </div>
       </nav>
 
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-95 flex flex-col items-center justify-center">
+          <button
+            className="absolute top-4 right-4 text-white text-3xl"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            &times;
+          </button>
+          <nav className="flex flex-col gap-8 text-2xl items-center">
+            <Link
+              to="/campaign"
+              className="text-white font-body hover:text-gray-300 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              THE CAMPAIGN
+            </Link>
+            <Link
+              to="/explore-the-parks"
+              className="text-white font-body hover:text-gray-300 transition"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              EXPLORE THE PARKS
+            </Link>
+            <button
+              onClick={() => {
+                setShowModal(true);
+                setMobileMenuOpen(false);
+              }}
+              className="bg-white text-black font-textured px-6 py-2 rounded-full text-lg font-bold hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg mt-4"
+            >
+              SHARE #PARKNEIGHBOR
+            </button>
+          </nav>
+        </div>
+      )}
+
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70">
           <div
@@ -66,7 +110,7 @@ const NavBar: React.FC = () => {
             }}
           >
             <button
-              className="absolute right-1 -top-0.5 text-black text-3xl font-extrabold hover:text-red-700 transition"
+              className="absolute right-2 top-2 text-black text-3xl font-extrabold hover:text-red-700 transition"
               onClick={() => setShowModal(false)}
               aria-label="Close"
               style={{ lineHeight: 1 }}

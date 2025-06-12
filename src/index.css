@@ -13,8 +13,8 @@
 
 @font-face {
   font-family: 'Forest Trophy Rounded';
-  src: url('/fonts/ForestTrophyRounded.woff2') format('woff2'),
-       url('/fonts/ForestTrophyRounded.woff') format('woff');
+  src: url('/fonts/Forest Trophy Rounded.woff2') format('woff2'),
+       url('/fonts/Forest Trophy Rounded.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
@@ -22,8 +22,8 @@
 
 @font-face {
   font-family: 'Forest Trophy Textured';
-  src: url('/fonts/ForestTrophyTextured.woff2') format('woff2'),
-       url('/fonts/ForestTrophyTextured.woff') format('woff');
+  src: url('/fonts/Forest Trophy Textured.woff2') format('woff2'),
+       url('/fonts/Forest Trophy Textured.woff') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;
