@@ -133,7 +133,7 @@ const NavBar: React.FC = () => {
                 }}
               >
                 <video
-                  src="https://assets.dittoditto.io/campaigns/NationalParks/Videos/Ditto%20-%20A%20Promo.mp4"
+                  src="https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Ditto%20-%20A%20Promo.mp4"
                   controls
                   autoPlay
                   muted

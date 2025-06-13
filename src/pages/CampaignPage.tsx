@@ -5,28 +5,28 @@ const sections = [
   {
     title: "America’s Parks Are Under Threat",
     text: "From budget cuts to climate crisis, our public lands are being dismantled before our very eyes. These places hold our history, reflect our values, and shape our future. Let’s not lose them.",
-    image: "https://assets.dittoditto.io/campaigns/NationalParks/Videos/Statue-Liberty.mp4",
+    image: "https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Statue-Liberty.mp4",
     parkName: "Statue of Liberty",
     state: "New York"
   },
   {
     title: "Your Park Is Closer Than You Think",
     text: "We believe proximity is power. Discover your National Park Neighbor and take pride in the natural and cultural sites just around the corner.",
-    image: "https://assets.dittoditto.io/campaigns/NationalParks/Videos/Yosemite.mp4",
+    image: "https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Yosemite.mp4",
     parkName: "Yosemite",
     state: "California"
   },
   {
     title: "Why We Built This",
     text: "Ditto uses data and design to help people connect. This campaign delivers personalized stories that highlight your park neighbor, and gives you tools to share it proudly.",
-    image: "https://assets.dittoditto.io/campaigns/NationalParks/Videos/Zion.mp4",
+    image: "https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Zion.mp4",
     parkName: "Zion",
     state: "Utah"
   },
   {
     title: "Take Action",
     text: "Protect what’s yours. Share what matters. Donate, volunteer, and show up for the parks near you. Explore and support these organizations:",
-    image: "https://assets.dittoditto.io/campaigns/NationalParks/Videos/Crater-Lake.mp4",
+    image: "https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Crater-Lake.mp4",
     parkName: "Crater Lake",
     state: "Oregon",
     ctas: [
@@ -38,7 +38,7 @@ const sections = [
   {
     title: "Crafted by Ditto",
     text: "This project was crafted by Ditto, a creative platform that helps campaigns and communities scale their stories using data. Ditto is built by Global Creative Agency, DBC.",
-    image: "https://assets.dittoditto.io/campaigns/NationalParks/Videos/Acadia.mp4",
+    image: "https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/Videos/Acadia.mp4",
     parkName: "Acadia",
     state: "Maine",
     ctas: [

@@ -15,7 +15,6 @@ type ParkEntry = {
 
 const SLIDE_WIDTH = 240; // px
 const SLIDE_GAP = 24; // px
-const SLIDE_HEIGHT = 320; // px
 
 function ResultsPage() {
   const { zip } = useParams<{ zip: string }>();
@@ -186,7 +185,7 @@ function ResultsPage() {
         </div>
         <div className="flex flex-col gap-2">
           {matches.map((entry, idx) => {
-            const imgUrl = `https://assets.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
+            const imgUrl = `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
             const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
             return (
               <button
@@ -209,8 +208,8 @@ function ResultsPage() {
       style={{ backgroundImage: `url(${resultsBg})` }}
     >
       <Helmet>
-        <meta property="og:image" content={matches[0] ? `https://assets.dittoditto.io/campaigns/NationalParks/${matches[0].expected_file_name}` : '/default-share.png'} />
-        <meta name="twitter:image" content={matches[0] ? `https://assets.dittoditto.io/campaigns/NationalParks/${matches[0].expected_file_name}` : '/default-share.png'} />
+        <meta property="og:image" content={matches[0] ? `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${matches[0].expected_file_name}` : '/default-share.png'} />
+        <meta name="twitter:image" content={matches[0] ? `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${matches[0].expected_file_name}` : '/default-share.png'} />
       </Helmet>
 
       <NavBarResults onShareClick={() => setShowModal(true)} />
@@ -232,14 +231,15 @@ function ResultsPage() {
       {/* Slider header and carousel */}
       <div className="w-full flex flex-col items-center justify-end mb-2 relative" style={{ flex: '0 0 auto', minHeight: 100 }}>
         {/* Animated Heading */}
-        <div className="relative w-full mb-6" style={{ minHeight: 48 }}>
+        <div className="w-full mb-6 flex flex-col items-center" style={{ minHeight: 48 }}>
           {slideHeadings.map((heading, idx) => (
             <span
               key={heading}
-              className={`block absolute left-0 right-0 text-2xl md:text-3xl font-body text-black text-center font-bold drop-shadow-lg tracking-tight transition-opacity duration-300
-    ${currentSlide === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-  `}
-              style={{ transitionProperty: 'opacity' }}
+              className={`text-2xl md:text-3xl font-body text-black text-center font-bold drop-shadow-lg tracking-tight transition-opacity duration-300
+        ${currentSlide === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+      `}
+              style={{ transitionProperty: 'opacity', position: 'absolute', left: 0, right: 0 }}
+              aria-hidden={currentSlide !== idx}
             >
               {heading}
             </span>
@@ -272,7 +272,7 @@ function ResultsPage() {
                 }}
               >
                 {matches.map((entry, index) => {
-                  const imgUrl = `https://assets.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
+                  const imgUrl = `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
                   const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
                   const downloadLabel = downloadLabels[index] || 'Download';
                   const isActive = index === currentSlide;
