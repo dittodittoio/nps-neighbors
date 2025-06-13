@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import NavBarResults from '../components/NavBarResults';
@@ -20,29 +20,22 @@ function ResultsPage() {
   const { zip } = useParams<{ zip: string }>();
   const matches = (parkData as ParkEntry[]).filter((entry) => entry.zip === zip);
 
+  // Ensure "Story" is the second slide (index 1)
+  if (matches.length === 3 && matches[0].closest_park.toLowerCase().includes('story') === false) {
+    const storyIdx = matches.findIndex(m => m.closest_park.toLowerCase().includes('story'));
+    if (storyIdx > -1 && storyIdx !== 1) {
+      const [story] = matches.splice(storyIdx, 1);
+      matches.splice(1, 0, story);
+    }
+  }
+
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+  // Start with the first slide active (index 0)
   const [currentSlide, setCurrentSlide] = useState(0);
 
-  // Touch/swipe support
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  // Touch/swipe support (desktop slider only)
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (touchStartX.current - touchEndX.current > 40) {
-      setCurrentSlide((prev) => Math.min(prev + 1, matches.length - 1));
-    } else if (touchEndX.current - touchStartX.current > 40) {
-      setCurrentSlide((prev) => Math.max(prev - 1, 0));
-    }
-  };
 
   if (matches.length === 0) {
     return (
@@ -239,7 +232,7 @@ function ResultsPage() {
           </span>
         </div>
 
-        {/* Carousel (responsive for mobile and desktop) */}
+        {/* Carousel/Slideshow */}
         <div className="w-full flex flex-col items-center justify-end mb-8 relative">
           <div className="w-full max-w-3xl flex items-center justify-center mx-auto relative">
             {/* Left Arrow */}
@@ -249,40 +242,112 @@ function ResultsPage() {
               disabled={currentSlide === 0}
             />
 
-            {/* Slides Row */}
-            <div
-              className="overflow-hidden w-full"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
+            {/* Slides: slideshow on mobile, slider on desktop */}
+            <div className="w-full flex justify-center items-center">
+              {/* Mobile: Only show the active slide */}
+              <div className="block sm:hidden w-full flex justify-center items-center">
+                {matches.map((entry, index) => {
+                  if (index !== currentSlide) return null;
+                  const imgUrl = `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
+                  return (
+                    <div
+                      key={index}
+                      className="w-full max-w-[340px] flex flex-col items-center"
+                    >
+                      <div
+                        className="rounded-lg shadow-lg shadow-black/70 mx-auto bg-white flex items-center justify-center"
+                        style={{
+                          width: '100%',
+                          padding: 0,
+                          background: '#eee',
+                        }}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`${entry.closest_park} — Share Card ${index + 1}`}
+                          className="block"
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            maxHeight: '80vh',
+                            objectFit: 'contain',
+                            display: 'block',
+                          }}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-3 mt-4 w-full max-w-xs">
+                        {/* URL Input and Copy Button */}
+                        <div className="relative w-full max-w-xs">
+                          <input
+                            type="text"
+                            value={imgUrl}
+                            readOnly
+                            className="w-full pr-24 pl-3 py-2 rounded-full bg-gray-100 text-black text-xs font-mono truncate border border-gray-300"
+                            tabIndex={-1}
+                            aria-label="Image URL"
+                          />
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(imgUrl);
+                              setCopiedIdx(index);
+                              setTimeout(() => setCopiedIdx(null), 1500);
+                            }}
+                            className={`absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1 rounded-full font-body text-xs font-bold transition-all duration-200 flex items-center justify-center
+                              ${copiedIdx === index
+                                ? 'bg-green-600 text-white w-20'
+                                : 'bg-black text-white w-[70px] hover:bg-gray-800'}
+                            `}
+                            style={{ minWidth: '70px' }}
+                          >
+                            {copiedIdx === index ? (
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              'Copy'
+                            )}
+                          </button>
+                        </div>
+                        {/* Download */}
+                        <button
+                          onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
+                          className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
+                        >
+                          {['Download Story', 'Download Portrait', 'Download Square'][index] || 'Download'}
+                        </button>
+                        {/* Share (mobile only) */}
+                        <button
+                          onClick={() => handleShare(imgUrl)}
+                          className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition flex items-center justify-center md:hidden"
+                          style={{ display: 'flex' }}
+                        >
+                          {ShareIcon}
+                          Share
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Desktop: Slider */}
               <div
-                className="flex transition-transform duration-500"
+                className="hidden sm:flex transition-transform duration-500"
                 style={{
-                  width:
-                    window.innerWidth < 640
-                      ? `calc(${matches.length} * 100vw)`
-                      : `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
+                  width: `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
                   maxWidth: `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
-                  transform:
-                    window.innerWidth < 640
-                      ? `translateX(-${currentSlide * 100}vw)`
-                      : `translateX(calc(50% - ${(SLIDE_WIDTH + SLIDE_GAP) * currentSlide + SLIDE_WIDTH / 2}px))`,
+                  transform: `translateX(calc(50% - ${(SLIDE_WIDTH + SLIDE_GAP) * currentSlide + SLIDE_WIDTH / 2}px))`,
                   gap: `${SLIDE_GAP}px`,
                 }}
               >
                 {matches.map((entry, index) => {
                   const imgUrl = `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
-                  const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
-                  const downloadLabel = downloadLabels[index] || 'Download';
                   const isActive = index === currentSlide;
-
                   return (
                     <div
                       key={index}
                       className={`flex flex-col items-center transition-all duration-300 flex-shrink-0 ${
                         isActive ? 'scale-100 opacity-100 z-10' : 'scale-90 opacity-60 z-0'
-                      } w-full sm:w-[240px]`}
+                      } w-[240px] max-w-[240px]`}
                       style={{
                         justifyContent: 'flex-start',
                       }}
@@ -328,14 +393,13 @@ function ResultsPage() {
                                 setTimeout(() => setCopiedIdx(null), 1500);
                               }}
                               className={`absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1 rounded-full font-body text-xs font-bold transition-all duration-200 flex items-center justify-center
-                          ${copiedIdx === index
-                            ? 'bg-green-600 text-white w-20'
-                            : 'bg-black text-white w-[70px] hover:bg-gray-800'}
-                        `}
+                                ${copiedIdx === index
+                                  ? 'bg-green-600 text-white w-20'
+                                  : 'bg-black text-white w-[70px] hover:bg-gray-800'}
+                              `}
                               style={{ minWidth: '70px' }}
                             >
                               {copiedIdx === index ? (
-                                // Checkmark SVG
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                                 </svg>
@@ -349,7 +413,7 @@ function ResultsPage() {
                             onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
                             className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
                           >
-                            {downloadLabel}
+                            {['Download Story', 'Download Portrait', 'Download Square'][index] || 'Download'}
                           </button>
                           {/* Share (mobile only) */}
                           <button
