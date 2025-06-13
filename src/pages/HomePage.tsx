@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Instagram } from 'lucide-react';
 import { isValidZip } from '../utils/lookupPark';
-import NavBar from '../components/NavBar'; // <-- Import NavBar
+import NavBar from '../components/NavBar';
 
 const videoList = [
   { name: "Acadia", file: "Acadia.mp4", state: "Maine" },
@@ -27,12 +27,23 @@ function HomePage() {
   const [currentVideo, setCurrentVideo] = useState(videoList[0]);
   const [zipCode, setZipCode] = useState('');
   const [videoError, setVideoError] = useState(false);
+  const [hideLocation, setHideLocation] = useState(false); // NEW
   const navigate = useNavigate();
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * videoList.length);
     setCurrentVideo(videoList[randomIndex]);
-    // Removed isScrolled logic as it was unused
+  }, []);
+
+  // Hide location on scroll (mobile only)
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerWidth < 768) {
+        setHideLocation(window.scrollY > 10);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const handleZipChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +101,7 @@ function HomePage() {
 
       <div className="fixed inset-0 bg-black bg-opacity-40 z-0"></div>
 
-      <NavBar /> {/* <-- Use NavBar component here */}
+      <NavBar />
 
       <main className="relative z-10 h-screen flex flex-col">
         <div className="flex-1 flex items-center justify-center px-6 pt-24">
@@ -106,7 +117,7 @@ function HomePage() {
                   value={zipCode}
                   onChange={handleZipChange}
                   placeholder="Enter your U.S. ZIP code"
-                  className="w-full pl-6 pr-36 py-4 rounded-full text-center font-body text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500"
+                  className="w-full pl-6 pr-36 py-4 rounded-full text-center font-body text-base md:text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500"
                   maxLength={5}
                   pattern="\d{5}"
                   inputMode="numeric"
@@ -179,7 +190,12 @@ function HomePage() {
         </footer>
       </main>
 
-      <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
+      {/* Video location label: hide on scroll (mobile only) */}
+      <div
+        className={`fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 transition-opacity duration-300
+          ${hideLocation ? 'opacity-0 pointer-events-none' : 'opacity-100'}
+          md:opacity-100 md:pointer-events-auto`}
+      >
         <div className="bg-white bg-opacity-90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
           <p className="font-body text-sm text-gray-800 font-medium">
             {currentVideo.name}, {currentVideo.state}
