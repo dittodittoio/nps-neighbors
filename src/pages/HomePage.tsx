@@ -19,7 +19,7 @@ const videoList = [
   { name: "Mount Rushmore", file: "Rushmore.mp4", state: "South Dakota" },
   { name: "Statue of Liberty", file: "Statue-Liberty.mp4", state: "New York" },
   { name: "Yellowstone", file: "Yellowstone.mp4", state: "Wyoming" },
-  { name: "Yosemite", file: "Yosemite.mp4", state: "California" },
+  { name: "Yosemite", file: "Yosemite.mgip4", state: "California" },
   { name: "Zion", file: "Zion.mp4", state: "Utah" },
 ];
 
@@ -117,7 +117,7 @@ function HomePage() {
                   value={zipCode}
                   onChange={handleZipChange}
                   placeholder="Enter your U.S. ZIP code"
-                  className="w-full pl-6 pr-36 py-4 rounded-full text-center font-body text-base md:text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500"
+                  className="w-full pl-6 pr-36 py-4 rounded-full text-center font-body text-base md:text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500 placeholder:text-xs md:placeholder:text-base"
                   maxLength={5}
                   pattern="\d{5}"
                   inputMode="numeric"
