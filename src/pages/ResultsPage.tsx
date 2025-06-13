@@ -232,18 +232,11 @@ function ResultsPage() {
       <div className="w-full flex flex-col items-center justify-end mb-2 relative" style={{ flex: '0 0 auto', minHeight: 100 }}>
         {/* Animated Heading */}
         <div className="w-full mb-6 flex flex-col items-center" style={{ minHeight: 48 }}>
-          {slideHeadings.map((heading, idx) => (
-            <span
-              key={heading}
-              className={`text-2xl md:text-3xl font-body text-black text-center font-bold drop-shadow-lg tracking-tight transition-opacity duration-300
-        ${currentSlide === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}
-      `}
-              style={{ transitionProperty: 'opacity', position: 'absolute', left: 0, right: 0 }}
-              aria-hidden={currentSlide !== idx}
-            >
-              {heading}
-            </span>
-          ))}
+          <span
+            className="text-2xl md:text-3xl font-body text-black text-center font-bold drop-shadow-lg tracking-tight transition-opacity duration-300"
+          >
+            {slideHeadings[currentSlide]}
+          </span>
         </div>
 
         {/* Carousel (no absolute/fixed height, allow page to scroll) */}
