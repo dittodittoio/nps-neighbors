@@ -239,7 +239,7 @@ function ResultsPage() {
           </span>
         </div>
 
-        {/* Carousel (no absolute/fixed height, allow page to scroll) */}
+        {/* Carousel (responsive for mobile and desktop) */}
         <div className="w-full flex flex-col items-center justify-end mb-8 relative">
           <div className="w-full max-w-3xl flex items-center justify-center mx-auto relative">
             {/* Left Arrow */}
@@ -257,10 +257,17 @@ function ResultsPage() {
               onTouchEnd={handleTouchEnd}
             >
               <div
-                className="flex transition-transform duration-500 justify-center"
+                className="flex transition-transform duration-500"
                 style={{
-                  width: `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
-                  transform: `translateX(calc(50% - ${(SLIDE_WIDTH + SLIDE_GAP) * currentSlide + SLIDE_WIDTH / 2}px))`,
+                  width:
+                    window.innerWidth < 640
+                      ? `calc(${matches.length} * 100vw)`
+                      : `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
+                  maxWidth: `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
+                  transform:
+                    window.innerWidth < 640
+                      ? `translateX(-${currentSlide * 100}vw)`
+                      : `translateX(calc(50% - ${(SLIDE_WIDTH + SLIDE_GAP) * currentSlide + SLIDE_WIDTH / 2}px))`,
                   gap: `${SLIDE_GAP}px`,
                 }}
               >
@@ -273,11 +280,10 @@ function ResultsPage() {
                   return (
                     <div
                       key={index}
-                      className={`flex flex-col items-center transition-all duration-300 ${isActive ? 'scale-100 opacity-100 z-10' : 'scale-90 opacity-60 z-0'}`}
+                      className={`flex flex-col items-center transition-all duration-300 flex-shrink-0 ${
+                        isActive ? 'scale-100 opacity-100 z-10' : 'scale-90 opacity-60 z-0'
+                      } w-full sm:w-[240px]`}
                       style={{
-                        width: SLIDE_WIDTH,
-                        minWidth: SLIDE_WIDTH,
-                        maxWidth: SLIDE_WIDTH,
                         justifyContent: 'flex-start',
                       }}
                     >
