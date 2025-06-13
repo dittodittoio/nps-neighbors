@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import NavBarResults from '../components/NavBarResults';
@@ -13,12 +13,37 @@ type ParkEntry = {
   expected_file_name: string;
 };
 
+const SLIDE_WIDTH = 240; // px
+const SLIDE_GAP = 24; // px
+const SLIDE_HEIGHT = 320; // px
+
 function ResultsPage() {
   const { zip } = useParams<{ zip: string }>();
   const matches = (parkData as ParkEntry[]).filter((entry) => entry.zip === zip);
 
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Touch/swipe support
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (touchStartX.current - touchEndX.current > 40) {
+      setCurrentSlide((prev) => Math.min(prev + 1, matches.length - 1));
+    } else if (touchEndX.current - touchStartX.current > 40) {
+      setCurrentSlide((prev) => Math.max(prev - 1, 0));
+    }
+  };
 
   if (matches.length === 0) {
     return (
@@ -39,6 +64,38 @@ function ResultsPage() {
     </svg>
   );
 
+  // Fancy arrow SVGs
+  const ArrowButton = ({
+    direction,
+    onClick,
+    disabled,
+  }: {
+    direction: 'left' | 'right';
+    onClick: () => void;
+    disabled?: boolean;
+  }) => (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`absolute top-1/2 z-20 bg-white bg-opacity-80 hover:bg-opacity-100 text-black rounded-full p-2 shadow-lg transition-all duration-200 flex items-center justify-center
+        ${direction === 'left' ? 'left-0 -translate-y-1/2 -translate-x-1/2' : 'right-0 -translate-y-1/2 translate-x-1/2'}
+        ${disabled ? 'opacity-40 cursor-not-allowed' : ''}
+      `}
+      aria-label={direction === 'left' ? 'Previous' : 'Next'}
+      style={{ width: 48, height: 48 }}
+    >
+      {direction === 'left' ? (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      ) : (
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      )}
+    </button>
+  );
+
   // Share handler (for mobile native share)
   const handleShare = (url: string) => {
     if (navigator.share) {
@@ -51,15 +108,28 @@ function ResultsPage() {
     }
   };
 
-  // For 3 images, set order so first is in the middle on desktop
-  const getOrder = (idx: number) => {
-    if (matches.length === 3) {
-      if (idx === 0) return 'md:order-2'; // middle
-      if (idx === 1) return 'md:order-1'; // left
-      if (idx === 2) return 'md:order-3'; // right
+  // Force download handler for cross-origin images
+  const handleDownload = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url, { mode: 'cors' });
+      const blob = await response.blob();
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch {
+      window.open(url, '_blank');
     }
-    return '';
   };
+
+  // Slider headings
+  const slideHeadings = [
+    "Show your #parkneighbor pride in your Stories",
+    "Make your #parkneighbor post-worthy",
+    "Share your #parkneighbor everywhere"
+  ];
 
   // Modal for sharing
   const Modal = () => (
@@ -119,14 +189,13 @@ function ResultsPage() {
             const imgUrl = `https://assets.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
             const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
             return (
-              <a
+              <button
                 key={imgUrl}
-                href={imgUrl}
-                download
+                onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
                 className="bg-gray-200 text-black px-4 py-2 rounded font-body font-bold text-center"
               >
                 {downloadLabels[idx] || 'Download'}
-              </a>
+              </button>
             );
           })}
         </div>
@@ -136,7 +205,7 @@ function ResultsPage() {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white"
+      className="min-h-screen bg-cover bg-center bg-no-repeat bg-fixed text-white flex flex-col"
       style={{ backgroundImage: `url(${resultsBg})` }}
     >
       <Helmet>
@@ -148,7 +217,7 @@ function ResultsPage() {
 
       {showModal && <Modal />}
 
-      <div className="flex flex-col items-center justify-center px-4 pt-24 pb-12">
+      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-24 pb-4 w-full">
         <h3 className="text-xl md:text-2xl font-textured mb-2 text-center leading-tight drop-shadow-lg text-black">
           Your National Park Neighbor is
         </h3>
@@ -158,80 +227,155 @@ function ResultsPage() {
         <h2 className="text-lg md:text-xl font-body mb-8 text-center leading-tight drop-shadow-lg text-black">
           {stateName}
         </h2>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 w-full max-w-6xl md:items-end">
-          {matches.map((entry, index) => {
-            const imgUrl = `https://assets.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
-            const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
-            const downloadLabel = downloadLabels[index] || 'Download';
+      {/* Slider header and carousel */}
+      <div className="w-full flex flex-col items-center justify-end mb-2 relative" style={{ flex: '0 0 auto', minHeight: 100 }}>
+        {/* Animated Heading */}
+        <div className="relative w-full mb-6" style={{ minHeight: 48 }}>
+          {slideHeadings.map((heading, idx) => (
+            <span
+              key={heading}
+              className={`block absolute left-0 right-0 text-2xl md:text-3xl font-body text-black text-center font-bold drop-shadow-lg tracking-tight transition-opacity duration-300
+    ${currentSlide === idx ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+  `}
+              style={{ transitionProperty: 'opacity' }}
+            >
+              {heading}
+            </span>
+          ))}
+        </div>
 
-            return (
-              <div key={index} className={`flex flex-col items-center ${getOrder(index)}`}>
-                <div
-                  className={`rounded-lg shadow-lg shadow-black/70 mx-auto bg-white overflow-hidden`}
-                  style={{ width: 200 }}
-                >
-                  <img
-                    src={imgUrl}
-                    alt={`${entry.closest_park} — Share Card ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="flex flex-col gap-3 mt-4 w-full max-w-xs">
-                  {/* URL Input and Copy Button */}
-                  <div className="relative w-full max-w-xs">
-                    <input
-                      type="text"
-                      value={imgUrl}
-                      readOnly
-                      className="w-full pr-24 pl-3 py-2 rounded-full bg-gray-100 text-black text-xs font-mono truncate border border-gray-300"
-                      tabIndex={-1}
-                      aria-label="Image URL"
-                    />
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(imgUrl);
-                        setCopiedIdx(index);
-                        setTimeout(() => setCopiedIdx(null), 1500);
+        {/* Carousel (no absolute/fixed height, allow page to scroll) */}
+        <div className="w-full flex flex-col items-center justify-end mb-8 relative">
+          <div className="w-full max-w-3xl flex items-center justify-center mx-auto relative">
+            {/* Left Arrow */}
+            <ArrowButton
+              direction="left"
+              onClick={() => setCurrentSlide((prev) => Math.max(prev - 1, 0))}
+              disabled={currentSlide === 0}
+            />
+
+            {/* Slides Row */}
+            <div
+              className="overflow-hidden w-full"
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div
+                className="flex transition-transform duration-500 justify-center"
+                style={{
+                  width: `${matches.length * (SLIDE_WIDTH + SLIDE_GAP)}px`,
+                  transform: `translateX(calc(50% - ${(SLIDE_WIDTH + SLIDE_GAP) * currentSlide + SLIDE_WIDTH / 2}px))`,
+                  gap: `${SLIDE_GAP}px`,
+                }}
+              >
+                {matches.map((entry, index) => {
+                  const imgUrl = `https://assets.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
+                  const downloadLabels = ['Download Story', 'Download Portrait', 'Download Square'];
+                  const downloadLabel = downloadLabels[index] || 'Download';
+                  const isActive = index === currentSlide;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`flex flex-col items-center transition-all duration-300 ${isActive ? 'scale-100 opacity-100 z-10' : 'scale-90 opacity-60 z-0'}`}
+                      style={{
+                        width: SLIDE_WIDTH,
+                        minWidth: SLIDE_WIDTH,
+                        maxWidth: SLIDE_WIDTH,
+                        justifyContent: 'flex-start',
                       }}
-                      className={`absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1 rounded-full font-body text-xs font-bold transition-all duration-200 flex items-center justify-center
-                        ${copiedIdx === index
-                          ? 'bg-green-600 text-white w-20'
-                          : 'bg-black text-white w-[70px] hover:bg-gray-800'}
-                      `}
-                      style={{ minWidth: '70px' }}
                     >
-                      {copiedIdx === index ? (
-                        // Checkmark SVG
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      ) : (
-                        'Copy'
+                      <div
+                        className="rounded-lg shadow-lg shadow-black/70 mx-auto bg-white flex items-center justify-center"
+                        style={{
+                          width: '100%',
+                          padding: 0,
+                          background: '#eee',
+                        }}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={`${entry.closest_park} — Share Card ${index + 1}`}
+                          className="block"
+                          style={{
+                            width: '100%',
+                            height: 'auto',
+                            maxHeight: '80vh',
+                            objectFit: 'contain',
+                            display: 'block',
+                          }}
+                        />
+                      </div>
+                      {/* Only show the button area for the active slide */}
+                      {isActive && (
+                        <div className="flex flex-col gap-3 mt-4 w-full max-w-xs">
+                          {/* URL Input and Copy Button */}
+                          <div className="relative w-full max-w-xs">
+                            <input
+                              type="text"
+                              value={imgUrl}
+                              readOnly
+                              className="w-full pr-24 pl-3 py-2 rounded-full bg-gray-100 text-black text-xs font-mono truncate border border-gray-300"
+                              tabIndex={-1}
+                              aria-label="Image URL"
+                            />
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(imgUrl);
+                                setCopiedIdx(index);
+                                setTimeout(() => setCopiedIdx(null), 1500);
+                              }}
+                              className={`absolute right-1 top-1/2 -translate-y-1/2 px-4 py-1 rounded-full font-body text-xs font-bold transition-all duration-200 flex items-center justify-center
+                          ${copiedIdx === index
+                            ? 'bg-green-600 text-white w-20'
+                            : 'bg-black text-white w-[70px] hover:bg-gray-800'}
+                        `}
+                              style={{ minWidth: '70px' }}
+                            >
+                              {copiedIdx === index ? (
+                                // Checkmark SVG
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                'Copy'
+                              )}
+                            </button>
+                          </div>
+                          {/* Download */}
+                          <button
+                            onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
+                            className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
+                          >
+                            {downloadLabel}
+                          </button>
+                          {/* Share (mobile only) */}
+                          <button
+                            onClick={() => handleShare(imgUrl)}
+                            className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition flex items-center justify-center md:hidden"
+                            style={{ display: 'flex' }}
+                          >
+                            {ShareIcon}
+                            Share
+                          </button>
+                        </div>
                       )}
-                    </button>
-                  </div>
-                  {/* Download */}
-                  <a
-                    href={imgUrl}
-                    download
-                    className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
-                  >
-                    {downloadLabel}
-                  </a>
-                  {/* Share (mobile only) */}
-                  <button
-                    onClick={() => handleShare(imgUrl)}
-                    className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition flex items-center justify-center md:hidden"
-                    style={{ display: 'flex' }}
-                  >
-                    {ShareIcon}
-                    Share
-                  </button>
-                </div>
+                    </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+
+            {/* Right Arrow */}
+            <ArrowButton
+              direction="right"
+              onClick={() => setCurrentSlide((prev) => Math.min(prev + 1, matches.length - 1))}
+              disabled={currentSlide === matches.length - 1}
+            />
+          </div>
         </div>
       </div>
     </div>
