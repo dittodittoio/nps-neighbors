@@ -5,6 +5,12 @@ import NavBarResults from '../components/NavBarResults';
 import parkData from '../data/parklookup.json';
 import resultsBg from '../images/resultspagebackgrounddark.png';
 
+declare global {
+  interface Window {
+    gtag?: (...args: any[]) => void;
+  }
+}
+
 type ParkEntry = {
   zip: string;
   state_name: string;
@@ -33,9 +39,6 @@ function ResultsPage() {
   const [showModal, setShowModal] = useState(false);
   // Start with the first slide active (index 0)
   const [currentSlide, setCurrentSlide] = useState(0);
-
-  // Touch/swipe support (desktop slider only)
-
 
   if (matches.length === 0) {
     return (
@@ -90,6 +93,13 @@ function ResultsPage() {
 
   // Share handler (for mobile native share)
   const handleShare = (url: string) => {
+    if (window.gtag) {
+      window.gtag('event', 'share_card', {
+        event_category: 'engagement',
+        event_label: url,
+        zip: zip,
+      });
+    }
     if (navigator.share) {
       navigator.share({
         title: 'Check out this National Park Neighbor!',
@@ -101,7 +111,14 @@ function ResultsPage() {
   };
 
   // Force download handler for cross-origin images
-  const handleDownload = async (url: string, filename: string) => {
+  const handleDownload = async (url: string, filename: string, entry: ParkEntry, index: number) => {
+    // GA4 event
+    window.gtag?.('event', 'download_share_card', {
+      event_category: 'engagement',
+      event_label: entry.closest_park + ' - ' + (['Story', 'Portrait', 'Square'][index] || 'Other'),
+      value: index,
+      zip: zip,
+    });
     try {
       const response = await fetch(url, { mode: 'cors' });
       const blob = await response.blob();
@@ -183,7 +200,7 @@ function ResultsPage() {
             return (
               <button
                 key={imgUrl}
-                onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
+                onClick={() => handleDownload(imgUrl, entry.expected_file_name, entry, idx)}
                 className="bg-gray-200 text-black px-4 py-2 rounded font-body font-bold text-center"
               >
                 {downloadLabels[idx] || 'Download'}
@@ -310,7 +327,7 @@ function ResultsPage() {
                         </div>
                         {/* Download */}
                         <button
-                          onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
+                          onClick={() => handleDownload(imgUrl, entry.expected_file_name, entry, index)}
                           className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
                         >
                           {['Download Story', 'Download Portrait', 'Download Square'][index] || 'Download'}
@@ -410,7 +427,7 @@ function ResultsPage() {
                           </div>
                           {/* Download */}
                           <button
-                            onClick={() => handleDownload(imgUrl, entry.expected_file_name)}
+                            onClick={() => handleDownload(imgUrl, entry.expected_file_name, entry, index)}
                             className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition text-center"
                           >
                             {['Download Story', 'Download Portrait', 'Download Square'][index] || 'Download'}
