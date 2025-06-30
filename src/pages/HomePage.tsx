@@ -19,7 +19,7 @@ const videoList = [
   { name: "Mount Rushmore", file: "Rushmore.mp4", state: "South Dakota" },
   { name: "Statue of Liberty", file: "Statue-Liberty.mp4", state: "New York" },
   { name: "Yellowstone", file: "Yellowstone.mp4", state: "Wyoming" },
-  { name: "Yosemite", file: "Yosemite.mgip4", state: "California" },
+  { name: "Yosemite", file: "Yosemite.mp4", state: "California" },
   { name: "Zion", file: "Zion.mp4", state: "Utah" },
 ];
 
@@ -27,7 +27,8 @@ function HomePage() {
   const [currentVideo, setCurrentVideo] = useState(videoList[0]);
   const [zipCode, setZipCode] = useState('');
   const [videoError, setVideoError] = useState(false);
-  const [hideLocation, setHideLocation] = useState(false); // NEW
+  const [hideLocation, setHideLocation] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -78,25 +79,33 @@ function HomePage() {
 
   return (
     <div className="h-screen relative overflow-x-hidden">
-      {!videoError ? (
+      {/* Fallback image always rendered, fades in if video fails or before video loads */}
+      <img
+        src={getStillImagePath(currentVideo.file)}
+        alt={currentVideo.name}
+        className={`w-full h-full object-cover absolute inset-0 transition-opacity duration-500
+          ${imageLoaded && !videoError ? 'opacity-0' : 'opacity-100'}`}
+        style={{ zIndex: 1, pointerEvents: 'none', userSelect: 'none' }}
+        draggable={false}
+        onLoad={() => setImageLoaded(true)}
+      />
+      {/* Video on top, only visible if not errored */}
+      {!videoError && (
         <video
           className="video-background w-full h-full object-cover absolute inset-0"
           autoPlay
           muted
           loop
           playsInline
+          preload="none"
           onError={handleVideoError}
           key={currentVideo.file}
           poster={getStillImagePath(currentVideo.file)}
+          style={{ zIndex: 2, background: 'transparent' }}
         >
           <source src={getVideoUrl(currentVideo.file)} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-      ) : (
-        <div
-          className="video-background bg-cover bg-center bg-no-repeat w-full h-full absolute inset-0"
-          style={{ backgroundImage: `url(${getStillImagePath(currentVideo.file)})` }}
-        />
       )}
 
       <div className="fixed inset-0 bg-black bg-opacity-40 z-0"></div>
