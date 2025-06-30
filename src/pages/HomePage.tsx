@@ -126,7 +126,7 @@ function HomePage() {
                   value={zipCode}
                   onChange={handleZipChange}
                   placeholder="Enter your U.S. ZIP code"
-                  className="w-full pl-6 pr-36 py-4 rounded-full text-center font-body text-base md:text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500 placeholder:text-xs md:placeholder:text-base"
+                  className="w-full pl-6 pr-24 md:pr-36 py-4 rounded-full text-center font-body text-base md:text-lg bg-white bg-opacity-90 backdrop-blur-sm border-0 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-200 shadow-lg placeholder-gray-500 placeholder:text-xs md:placeholder:text-base"
                   maxLength={5}
                   pattern="\d{5}"
                   inputMode="numeric"
@@ -134,7 +134,7 @@ function HomePage() {
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-6 py-2 rounded-full font-textured text-sm font-bold hover:bg-gray-800 transition-all duration-200 shadow-md min-w-[90px]"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black text-white px-4 md:px-6 py-2 rounded-full font-textured text-xs md:text-sm font-bold hover:bg-gray-800 transition-all duration-200 shadow-md min-w-[70px] md:min-w-[90px]"
                 >
                   FIND
                 </button>
