@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import NavBarResults from '../components/NavBarResults';
@@ -7,7 +7,7 @@ import resultsBg from '../images/resultspagebackgrounddark.png';
 
 declare global {
   interface Window {
-    gtag?: (...args: any[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }
 
@@ -91,28 +91,64 @@ function ResultsPage() {
     </button>
   );
 
-  // Share handler (for mobile native share)
-  const handleShare = (url: string) => {
-    if (window.gtag) {
-      window.gtag('event', 'share_card', {
-        event_category: 'engagement',
-        event_label: url,
-        zip: zip,
-      });
-    }
-    if (navigator.share) {
-      navigator.share({
-        title: 'Check out this National Park Neighbor!',
-        url,
-      });
+  // Share handler (share image file if supported on mobile, else share link)
+  const isMobile = /Mobi|Android/i.test(window.navigator.userAgent);
+
+  const handleShare = async (imgUrl: string, entry: ParkEntry) => {
+    window.gtag?.('event', 'share_card', {
+      event_category: 'engagement',
+      event_label: imgUrl,
+      zip: zip,
+    });
+
+    if (isMobile) {
+      try {
+        const response = await fetch(imgUrl);
+        const blob = await response.blob();
+        const file = new File([blob], entry.expected_file_name, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: 'Check out this National Park Neighbor!',
+            text: entry.closest_park,
+            files: [file],
+          });
+          return;
+        }
+        // If files not supported, fallback to link
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Check out this National Park Neighbor!',
+            url: imgUrl,
+          });
+          return;
+        }
+      } catch {
+        // If fetch or share fails, fallback to link
+        if (navigator.share) {
+          await navigator.share({
+            title: 'Check out this National Park Neighbor!',
+            url: imgUrl,
+          });
+        }
+      }
     } else {
-      alert('Sharing is only supported on mobile devices.');
+      // Desktop: just share the link if supported
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Check out this National Park Neighbor!',
+          url: imgUrl,
+        });
+      } else {
+        // Optionally, copy to clipboard or show a message
+        navigator.clipboard.writeText(imgUrl);
+        alert('Link copied to clipboard!');
+      }
     }
   };
 
   // Force download handler for cross-origin images
   const handleDownload = async (url: string, filename: string, entry: ParkEntry, index: number) => {
-    // GA4 event
     window.gtag?.('event', 'download_share_card', {
       event_category: 'engagement',
       event_label: entry.closest_park + ' - ' + (['Story', 'Portrait', 'Square'][index] || 'Other'),
@@ -262,7 +298,7 @@ function ResultsPage() {
             {/* Slides: slideshow on mobile, slider on desktop */}
             <div className="w-full flex justify-center items-center">
               {/* Mobile: Only show the active slide */}
-              <div className="block sm:hidden w-full flex justify-center items-center">
+              <div className="sm:hidden w-full flex justify-center items-center">
                 {matches.map((entry, index) => {
                   if (index !== currentSlide) return null;
                   const imgUrl = `https://cdn.parkneighbor.dittoditto.io/campaigns/NationalParks/${entry.expected_file_name}`;
@@ -334,7 +370,7 @@ function ResultsPage() {
                         </button>
                         {/* Share (mobile only) */}
                         <button
-                          onClick={() => handleShare(imgUrl)}
+                          onClick={() => handleShare(imgUrl, entry)}
                           className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition flex items-center justify-center md:hidden"
                           style={{ display: 'flex' }}
                         >
@@ -434,7 +470,7 @@ function ResultsPage() {
                           </button>
                           {/* Share (mobile only) */}
                           <button
-                            onClick={() => handleShare(imgUrl)}
+                            onClick={() => handleShare(imgUrl, entry, index)}
                             className="bg-white text-black px-5 py-2 rounded-full font-body text-sm font-bold hover:bg-gray-200 transition flex items-center justify-center md:hidden"
                             style={{ display: 'flex' }}
                           >
